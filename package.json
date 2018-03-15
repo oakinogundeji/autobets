@@ -1,0 +1,19 @@
+{
+  "name": "v2",
+  "version": "1.0.0",
+  "description": "cr8 new puppeteer page on receipt of msg",
+  "main": "parent.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start-dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "author": "TSSDEVS",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^1.1.1"
+  },
+  "devDependencies": {
+    "dotenv": "^5.0.1"
+  }
+}
