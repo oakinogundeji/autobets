@@ -59,7 +59,8 @@ async function bot() {
     timeout: 180000
   });
   // allow 'page' instance to output any calls to browser log to process obj
-  page.on('console', data => process.send(data.text()));
+  //page.on('console', data => process.send(data.text()));
+  page.on('console', data => console.log(data.text()));
   // bind to races container and lsiten for updates to , bets etc
   await page.$eval(SELECTIONS_CONTAINER_SELECTOR,
     (target, MATCHED_AMOUNT_SELECTOR) => {
@@ -157,7 +158,7 @@ async function bot() {
     );
   }, MATCHED_AMOUNT_SELECTOR);
 
-  async function placeBet(SELECTION) {
+  async function placeBet(SELECTION, TYPE) {
     // create blank page
     const page = await browser.newPage();
     // set viewport to 1366*768
@@ -175,25 +176,23 @@ async function bot() {
     });
 
     // get RUNNERS
-    let targets = await page.$$eval(RUNNERS_SELECTOR, (targets, SELECTION) => {
+    let targets = await page.$$eval(RUNNERS_SELECTOR, (targets, SELECTION, TYPE) => {
       console.log('targets');
       console.log(targets);
+      targets.filter(target => {// filter for SELECTION
+        if(target.children[0].children[1].children[1].children[0].children[0].children[0].children[2].children[0].innerText.split('\n')[0] == SELECTION) {
+          if(TYPE == 'bet') {
+            return target.children[3].firstChild.click(); 
+          }
+          else if(TYPE == 'lay') {
+            return target.children[4].firstChild.click(); 
+          }         
+        }
+      }); 
       return targets;        
-    }, SELECTION);
-
-    /*targets.filter(target => {
-      if(target.children[0].children[1].children[1].children[0].children[0].children[0].children[2].children[0].innerText.split('\n')[0] == SELECTION) {
-        return target.children[3].firstChild.click();          
-      }
-    });*/
-    
-    //setTimeout(() => page.close(), 10000);
+    }, SELECTION, TYPE);    
   }
-
-  process.on('message', data => {
-    //const SELECTION = data.selection;
-    return placeBet('Dubai Waves');
-  });
+  setTimeout(() => placeBet('Dubai Waves', 'lay'), 3000);
 }
 
 // execute scraper
