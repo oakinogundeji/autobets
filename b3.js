@@ -65,7 +65,7 @@ async function bot() {
   /*
   await page.$eval(SELECTIONS_CONTAINER_SELECTOR,
     (target, MATCHED_AMOUNT_SELECTOR) => {
-      
+
       target.addEventListener('DOMSubtreeModified', function (e) {
         // check for most common element of back and lay as source of event
         if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') {
@@ -184,25 +184,25 @@ async function bot() {
         targets.filter(target => {// filter for SELECTION
           if(target.children[0].children[1].children[1].children[0].children[0].children[0].children[2].children[0].innerText.split('\n')[0] == SELECTION) {
             if(TYPE == 'bet') {
-              target.children[3].firstChild.click(); 
-              console.log('clicked bet...');              
+              target.children[3].firstChild.click();
+              console.log('clicked bet...');
               return true
             }
             else if(TYPE == 'lay') {
-              target.children[4].firstChild.click(); 
+              target.children[4].firstChild.click();
               console.log('clicked lay...');
               return true;
-            }   
+            }
             else {
               return false;
-            }      
+            }
           }
         });
       }
       catch(err) {
         console.log(err);
-      }       
-    }, SELECTION, TYPE);  
+      }
+    }, SELECTION, TYPE);
     // ensure BET_SELECTOR available
     await page.waitForSelector(BET_SELECTOR, {
       timeout: 180000
@@ -212,13 +212,13 @@ async function bot() {
     await page.waitForSelector(RUNNER_NAME_SELECTOR, {
       timeout: 180000
     });
-    console.log('getting runnerName...');    
-    
+    console.log('getting runnerName...');
+
     const runnerName = await page.$eval(RUNNER_NAME_SELECTOR, el => el.innerText);
-    console.log(`runnerName: ${runnerName}`); 
-    
+    console.log(`runnerName: ${runnerName}`);
+
     // confirm runnerName == SELECTION
-       
+
     if(runnerName == SELECTION) {
       // ensure BET_VALUES_SELECTOR available
       await page.waitForSelector(BET_VALUES_SELECTOR, {
@@ -234,10 +234,16 @@ async function bot() {
       await page.waitForSelector(SIZE_INPUT_SELECTOR, {
         timeout: 180000
       });
-      // select SIZE_INPUT_SELECTOR 
+      // select SIZE_INPUT_SELECTOR
       await page.click(SIZE_INPUT_SELECTOR);
       // set value of SIZE_INPUT_SELECTOR to TARGET_LIQUIDITY
-      await page.type(SIZE_INPUT_SELECTOR, TARGET_LIQUIDITY, {delay: 100})
+      await page.type(SIZE_INPUT_SELECTOR, TARGET_LIQUIDITY, {delay: 100});
+      // ensure SUBMIT_BET_SELECTOR available
+      await page.waitForSelector(SUBMIT_BET_SELECTOR, {
+        timeout: 180000
+      });
+      // submit the BET
+      await page.click(SUBMIT_BET_SELECTOR);
       // CLOSE IN 10 SECS
       setTimeout(() => page.close(), 10000);
     }
@@ -246,7 +252,7 @@ async function bot() {
       throw err;
     }
   }
-  setTimeout(() => placeBet('Candesta', 'bet', 2.34, '12.34'), 3000);
+  setTimeout(() => placeBet('Yamato', 'lay', 2.34, '2.34'), 3000);
 }
 
 // execute scraper
