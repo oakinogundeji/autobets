@@ -59,11 +59,13 @@ async function bot() {
     timeout: 180000
   });
   // allow 'page' instance to output any calls to browser log to process obj
-  page.on('console', data => process.send(data.text()));
+  //page.on('console', data => process.send(data.text()));
+  page.on('console', data => console.log(data.text()));
   // bind to races container and lsiten for updates to , bets etc
+  /*
   await page.$eval(SELECTIONS_CONTAINER_SELECTOR,
     (target, MATCHED_AMOUNT_SELECTOR) => {
-      
+
       target.addEventListener('DOMSubtreeModified', function (e) {
         // check for most common element of back and lay as source of event
         if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') {
@@ -155,9 +157,9 @@ async function bot() {
         }
       }
     );
-  }, MATCHED_AMOUNT_SELECTOR);
+  }, MATCHED_AMOUNT_SELECTOR);*/
 
-  async function placeBet(SELECTION) {
+  async function placeBet(SELECTION, TYPE, TARGET_ODDS, TARGET_LIQUIDITY) {
     // create blank page
     const page = await browser.newPage();
     // set viewport to 1366*768
@@ -169,31 +171,88 @@ async function bot() {
       waitUntil: 'networkidle2',
       timeout: 180000
     });
-    // ensure race container selector available
+    // ensure runners selector available
     await page.waitForSelector(RUNNERS_SELECTOR, {
       timeout: 180000
     });
 
     // get RUNNERS
-    let targets = await page.$$eval(RUNNERS_SELECTOR, (targets, SELECTION) => {
+    await page.$$eval(RUNNERS_SELECTOR, (targets, SELECTION, TYPE) => {
       console.log('targets');
       console.log(targets);
-      return targets;        
-    }, SELECTION);
-
-    /*targets.filter(target => {
-      if(target.children[0].children[1].children[1].children[0].children[0].children[0].children[2].children[0].innerText.split('\n')[0] == SELECTION) {
-        return target.children[3].firstChild.click();          
+      try {
+        targets.filter(target => {// filter for SELECTION
+          if(target.children[0].children[1].children[1].children[0].children[0].children[0].children[2].children[0].innerText.split('\n')[0] == SELECTION) {
+            if(TYPE == 'bet') {
+              target.children[3].firstChild.click();
+              console.log('clicked bet...');
+              return true
+            }
+            else if(TYPE == 'lay') {
+              target.children[4].firstChild.click();
+              console.log('clicked lay...');
+              return true;
+            }
+            else {
+              return false;
+            }
+          }
+        });
       }
-    });*/
-    
-    //setTimeout(() => page.close(), 10000);
-  }
+      catch(err) {
+        console.log(err);
+      }
+    }, SELECTION, TYPE);
+    // ensure BET_SELECTOR available
+    await page.waitForSelector(BET_SELECTOR, {
+      timeout: 180000
+    });
 
-  process.on('message', data => {
-    //const SELECTION = data.selection;
-    return placeBet('Dubai Waves');
-  });
+    // ensure RUNNER_NAME_SELECTOR available
+    await page.waitForSelector(RUNNER_NAME_SELECTOR, {
+      timeout: 180000
+    });
+    console.log('getting runnerName...');
+
+    const runnerName = await page.$eval(RUNNER_NAME_SELECTOR, el => el.innerText);
+    console.log(`runnerName: ${runnerName}`);
+
+    // confirm runnerName == SELECTION
+
+    if(runnerName == SELECTION) {
+      // ensure BET_VALUES_SELECTOR available
+      await page.waitForSelector(BET_VALUES_SELECTOR, {
+        timeout: 180000
+      });
+      // ensure PRICE_INPUT_SELECTOR available
+      await page.waitForSelector(PRICE_INPUT_SELECTOR, {
+        timeout: 180000
+      });
+      // set value of PRICE_INPUT_SELECTOR to TARGET_ODDS
+      await page.$eval(PRICE_INPUT_SELECTOR, (el, TARGET_ODDS) => el.value = TARGET_ODDS, TARGET_ODDS);
+      // ensure SIZE_INPUT_SELECTOR available
+      await page.waitForSelector(SIZE_INPUT_SELECTOR, {
+        timeout: 180000
+      });
+      // select SIZE_INPUT_SELECTOR
+      await page.click(SIZE_INPUT_SELECTOR);
+      // set value of SIZE_INPUT_SELECTOR to TARGET_LIQUIDITY
+      await page.type(SIZE_INPUT_SELECTOR, TARGET_LIQUIDITY, {delay: 100});
+      // ensure SUBMIT_BET_SELECTOR available
+      await page.waitForSelector(SUBMIT_BET_SELECTOR, {
+        timeout: 180000
+      });
+      // submit the BET
+      await page.click(SUBMIT_BET_SELECTOR);
+      // CLOSE IN 10 SECS
+      setTimeout(() => page.close(), 10000);
+    }
+    else {
+      const err = new Error('runnerName != SELECTION');
+      throw err;
+    }
+  }
+  setTimeout(() => placeBet('Yamato', 'lay', 2.34, '2.34'), 3000);
 }
 
 // execute scraper
